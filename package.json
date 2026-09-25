@@ -1,0 +1,16 @@
+{
+  "name": "resolvedor-de-rubiks",
+  "version": "1.0.0",
+  "description": "Web para resolver el cubo de Rubik 3x3 paso a paso con un visor 3D.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "build:vendor": "esbuild scripts/three-entry.js --bundle --format=esm --minify --legal-comments=eof --outfile=vendor/three.min.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "three": "0.186.1"
+  }
+}

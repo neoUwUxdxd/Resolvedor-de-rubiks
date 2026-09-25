@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resolvedor de Rubik</title>
+  <meta name="description" content="Resuelve tu cubo de Rubik 3×3 paso a paso: pinta los colores, pulsa resolver y sigue la solución en un cubo 3D animado.">
+  <meta name="theme-color" content="#070a13">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="css/styles.css">
+  <script>
+    // Aplica el tema guardado antes de pintar para evitar parpadeos.
+    try {
+      const saved = localStorage.getItem('rubik:theme');
+      if (saved === 'light' || saved === 'dark') document.documentElement.dataset.theme = saved;
+    } catch {}
+  </script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5Z"/></symbol>
+      <symbol id="i-pause" viewBox="0 0 24 24"><rect x="14" y="4" width="4.5" height="16" rx="1.2"/><rect x="5.5" y="4" width="4.5" height="16" rx="1.2"/></symbol>
+      <symbol id="i-first" viewBox="0 0 24 24"><path d="M19 20 9 12l10-8Z"/><path d="M5 19V5"/></symbol>
+      <symbol id="i-last" viewBox="0 0 24 24"><path d="m5 4 10 8-10 8Z"/><path d="M19 5v14"/></symbol>
+      <symbol id="i-prev" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+      <symbol id="i-next" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+      <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/></symbol>
+      <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+      <symbol id="i-eraser" viewBox="0 0 24 24"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></symbol>
+      <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+      <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0l1.58 6.14a2 2 0 0 0 1.44 1.44l6.14 1.58a.5.5 0 0 1 0 .96l-6.14 1.58a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0Z"/><path d="M20 3v4M22 5h-4"/></symbol>
+      <symbol id="i-flip" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+      <symbol id="i-orbit" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></symbol>
+      <symbol id="i-focus" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></symbol>
+      <symbol id="i-brush" viewBox="0 0 24 24"><path d="M18.37 2.63 14 7l-1.59-1.59a2 2 0 0 0-2.82 0L8 7l9 9 1.59-1.59a2 2 0 0 0 0-2.82L17 10l4.37-4.37a2.12 2.12 0 1 0-3-3Z"/><path d="M9 8c-2 3-4 3.5-7 4l8 10c2-1 6-5 6-7"/><path d="M14.5 17.5 4.5 15"/></symbol>
+      <symbol id="i-list" viewBox="0 0 24 24"><path d="M3 6h.01M3 12h.01M3 18h.01M8 6h13M8 12h13M8 18h13"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4.5M12 16h.01"/></symbol>
+      <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-dasharray="3 3.3"/></symbol>
+      <symbol id="i-keyboard" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></symbol>
+      <symbol id="i-cube" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></symbol>
+      <symbol id="i-cpu" viewBox="0 0 24 24"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2M15 20v2M2 15h2M2 9h2M20 15h2M20 9h2M9 2v2M9 20v2"/></symbol>
+      <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+      <symbol id="i-arrow-cw" viewBox="0 0 24 24"><path d="M20.5 9A9 9 0 1 0 21 12"/><path d="M21 4v5h-5"/></symbol>
+      <symbol id="i-arrow-ccw" viewBox="0 0 24 24"><path d="M3.5 9A9 9 0 1 1 3 12"/><path d="M3 4v5h5"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="backdrop" aria-hidden="true">
+    <div class="backdrop-grid"></div>
+    <div class="glow glow-a"></div>
+    <div class="glow glow-b"></div>
+    <div class="glow glow-c"></div>
+  </div>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#" aria-label="Resolvedor de Rubik, inicio">
+        <img src="favicon.svg" alt="" width="34" height="34">
+        <span class="brand-text">Resolvedor<span class="brand-sub">de Rubik</span></span>
+      </a>
+      <nav class="nav" aria-label="Secciones">
+        <a href="#resolver">Resolver</a>
+        <a href="#notacion">Notación</a>
+        <a href="#como-funciona">Cómo funciona</a>
+      </nav>
+      <button class="icon-btn" id="themeToggle" type="button" aria-label="Cambiar entre tema claro y oscuro" title="Cambiar tema">
+        <svg class="icon icon-sun"><use href="#i-sun"/></svg>
+        <svg class="icon icon-moon"><use href="#i-moon"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow"><span class="eyebrow-dot"></span>Algoritmo de dos fases de Kociemba</p>
+      <h1>Resuelve tu cubo de Rubik <span class="gradient-text">en segundos</span></h1>
+      <p class="lead">Copia los colores de tu cubo, pulsa <strong>Resolver</strong> y sigue la solución giro a giro en un cubo 3D. Casi siempre en 20 movimientos o menos.</p>
+      <ul class="hero-chips">
+        <li><svg class="icon"><use href="#i-bolt"/></svg>Solución en milisegundos</li>
+        <li><svg class="icon"><use href="#i-cube"/></svg>Visor 3D interactivo</li>
+        <li><svg class="icon"><use href="#i-lock"/></svg>Todo ocurre en tu navegador</li>
+      </ul>
+    </section>
+
+    <section class="workspace" id="resolver" aria-label="Resolvedor">
+      <div class="card viewer-card">
+        <div class="viewer-head">
+          <div class="engine-pill" id="engineStatus" data-state="loading">
+            <span class="engine-dot"></span><span class="engine-text">Preparando el motor…</span>
+          </div>
+          <div class="viewer-tools">
+            <button class="tool-btn" id="flipViewBtn" type="button" title="Ver la parte de atrás">
+              <svg class="icon"><use href="#i-flip"/></svg><span>Ver atrás</span>
+            </button>
+            <button class="tool-btn" id="autoRotateBtn" type="button" aria-pressed="false" title="Girar la vista automáticamente">
+              <svg class="icon"><use href="#i-orbit"/></svg><span>Auto-giro</span>
+            </button>
+            <button class="tool-btn icon-only" id="resetViewBtn" type="button" title="Centrar la vista" aria-label="Centrar la vista">
+              <svg class="icon"><use href="#i-focus"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="viewer" id="viewer">
+          <div class="viewer-hint" id="viewerHint">
+            <span>Arrastra para girar la vista</span>
+            <span class="hint-paint">· Toca una pegatina para pintarla</span>
+          </div>
+          <div class="solved-badge" id="solvedBadge" hidden>
+            <svg class="icon"><use href="#i-sparkles"/></svg>¡Cubo resuelto!
+          </div>
+          <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
+          <p class="webgl-error" id="webglError" hidden>Tu navegador no puede mostrar gráficos 3D (WebGL). Aun así puedes usar la plantilla para pintar y resolver el cubo.</p>
+        </div>
+
+        <div class="player is-empty" id="player">
+          <div class="player-now">
+            <div class="move-badge" id="moveBadge" aria-hidden="true">–</div>
+            <div class="move-text">
+              <strong id="moveAction">La solución aparecerá aquí</strong>
+              <span id="moveDetail">Pinta tu cubo o mézclalo y pulsa «Resolver».</span>
+            </div>
+          </div>
+          <div class="player-controls">
+            <div class="transport" role="group" aria-label="Reproducción de la solución">
+              <button class="round-btn" id="firstBtn" type="button" aria-label="Volver al principio" title="Principio (Inicio)"><svg class="icon"><use href="#i-first"/></svg></button>
+              <button class="round-btn" id="prevBtn" type="button" aria-label="Paso anterior" title="Anterior (←)"><svg class="icon"><use href="#i-prev"/></svg></button>
+              <button class="round-btn play" id="playBtn" type="button" aria-label="Reproducir" title="Reproducir (Espacio)">
+                <svg class="icon icon-play"><use href="#i-play"/></svg>
+                <svg class="icon icon-pause"><use href="#i-pause"/></svg>
+              </button>
+              <button class="round-btn" id="nextBtn" type="button" aria-label="Paso siguiente" title="Siguiente (→)"><svg class="icon"><use href="#i-next"/></svg></button>
+              <button class="round-btn" id="lastBtn" type="button" aria-label="Ir al final" title="Final (Fin)"><svg class="icon"><use href="#i-last"/></svg></button>
+            </div>
+            <div class="speed" role="radiogroup" aria-label="Velocidad">
+              <button type="button" role="radio" data-speed="0.5" aria-checked="false">0.5×</button>
+              <button type="button" role="radio" data-speed="1" aria-checked="true">1×</button>
+              <button type="button" role="radio" data-speed="2" aria-checked="false">2×</button>
+              <button type="button" role="radio" data-speed="4" aria-checked="false">4×</button>
+            </div>
+          </div>
+          <div class="progress" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
+        </div>
+      </div>
+
+      <aside class="card panel" aria-label="Controles">
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" id="tab-colores" aria-controls="pane-colores" aria-selected="true" data-tab="colores">
+            <svg class="icon"><use href="#i-brush"/></svg>Colores
+          </button>
+          <button class="tab" role="tab" id="tab-mezclar" aria-controls="pane-mezclar" aria-selected="false" data-tab="mezclar" tabindex="-1">
+            <svg class="icon"><use href="#i-shuffle"/></svg>Mezclar
+          </button>
+          <button class="tab" role="tab" id="tab-solucion" aria-controls="pane-solucion" aria-selected="false" data-tab="solucion" tabindex="-1">
+            <svg class="icon"><use href="#i-list"/></svg>Solución<span class="tab-badge" id="solutionCount" hidden></span>
+          </button>
+        </div>
+
+        <div class="pane" id="pane-colores" role="tabpanel" aria-labelledby="tab-colores">
+          <p class="pane-hint">Elige un color y toca las pegatinas de la plantilla o del cubo 3D. Sujeta tu cubo con el <b>blanco arriba</b> y el <b>verde de frente</b>.</p>
+          <div class="palette" id="palette" role="radiogroup" aria-label="Color para pintar"></div>
+          <div class="net" id="net" aria-label="Plantilla del cubo desplegado"></div>
+          <div class="pane-actions">
+            <button class="btn ghost" id="undoBtn" type="button" title="Deshacer (Ctrl+Z)"><svg class="icon"><use href="#i-undo"/></svg>Deshacer</button>
+            <button class="btn ghost" id="clearBtn" type="button"><svg class="icon"><use href="#i-eraser"/></svg>Vaciar</button>
+            <button class="btn ghost" id="resetBtn" type="button"><svg class="icon"><use href="#i-reset"/></svg>Resuelto</button>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-mezclar" role="tabpanel" aria-labelledby="tab-mezclar" hidden>
+          <button class="btn secondary wide" id="scrambleBtn" type="button"><svg class="icon"><use href="#i-shuffle"/></svg>Mezcla aleatoria</button>
+          <div class="scramble-out" id="scrambleOut" hidden>
+            <code id="scrambleText"></code>
+            <button class="icon-btn small" id="copyScrambleBtn" type="button" aria-label="Copiar mezcla" title="Copiar"><svg class="icon"><use href="#i-copy"/></svg></button>
+          </div>
+
+          <label class="field-label" for="algInput">Escribe tu propia mezcla</label>
+          <div class="alg-field">
+            <input id="algInput" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="R U R' U' F2 D L2 …">
+            <button class="btn primary-soft" id="applyAlgBtn" type="button">Aplicar</button>
+          </div>
+          <p class="field-error" id="algError" role="alert" hidden></p>
+
+          <div class="field-label with-icon"><svg class="icon"><use href="#i-keyboard"/></svg>Giros manuales</div>
+          <div class="keypad" id="keypad"></div>
+          <p class="pane-hint small">Con el teclado: <kbd>U</kbd> <kbd>R</kbd> <kbd>F</kbd> <kbd>D</kbd> <kbd>L</kbd> <kbd>B</kbd> giran cada cara y con <kbd>Mayús</kbd> giran al revés.</p>
+        </div>
+
+        <div class="pane" id="pane-solucion" role="tabpanel" aria-labelledby="tab-solucion" hidden>
+          <div class="empty" id="solutionEmpty">
+            <div class="empty-art" aria-hidden="true"><img src="favicon.svg" alt="" width="56" height="56"></div>
+            <p><strong>Aún no hay solución</strong><br>Pinta tu cubo o mézclalo y pulsa «Resolver».</p>
+          </div>
+          <div class="solution" id="solutionBox" hidden>
+            <div class="stats">
+              <div class="stat"><span class="stat-value" id="statMoves">0</span><span class="stat-label">movimientos</span></div>
+              <div class="stat"><span class="stat-value" id="statTime">0</span><span class="stat-label">ms de cálculo</span></div>
+              <div class="stat"><span class="stat-value" id="statStep">0</span><span class="stat-label">paso actual</span></div>
+            </div>
+            <ol class="moves" id="movesList" aria-label="Movimientos de la solución"></ol>
+            <div class="pane-actions">
+              <button class="btn ghost" id="copySolutionBtn" type="button"><svg class="icon"><use href="#i-copy"/></svg>Copiar solución</button>
+            </div>
+            <p class="tip"><svg class="icon"><use href="#i-cube"/></svg><span>Sujeta tu cubo siempre igual que en la plantilla (mismo centro arriba y de frente): cada letra indica la cara tal y como la ves.</span></p>
+          </div>
+        </div>
+
+        <div class="panel-foot">
+          <div class="status" id="status" data-level="info" role="status" aria-live="polite">
+            <svg class="icon status-icon"><use href="#i-dots"/></svg><span id="statusText"></span>
+          </div>
+          <button class="btn solve" id="solveBtn" type="button">
+            <span class="spinner" aria-hidden="true"></span>
+            <svg class="icon"><use href="#i-sparkles"/></svg><span class="solve-label">Resolver cubo</span>
+          </button>
+        </div>
+      </aside>
+    </section>
+
+    <section class="section" id="notacion">
+      <div class="section-head">
+        <p class="eyebrow small">Guía rápida</p>
+        <h2>Cómo leer los movimientos</h2>
+        <p class="section-lead">Cada letra es una cara del cubo. Imagina que miras esa cara de frente: sin símbolo se gira <b>90° en sentido horario</b>, con apóstrofo (<code>'</code>) en <b>sentido antihorario</b> y con un <code>2</code> se da <b>media vuelta</b>.</p>
+      </div>
+      <div class="notation-grid" id="notationGrid"></div>
+      <p class="notation-extra">En la mezcla también puedes usar capas centrales (<code>M</code>, <code>E</code>, <code>S</code>), giros dobles (<code>r</code>, <code>Rw</code>…) y rotaciones del cubo completo (<code>x</code>, <code>y</code>, <code>z</code>).</p>
+    </section>
+
+    <section class="section" id="como-funciona">
+      <div class="section-head">
+        <p class="eyebrow small">Paso a paso</p>
+        <h2>Cómo funciona</h2>
+      </div>
+      <ol class="steps">
+        <li class="step-card">
+          <span class="step-num" style="--c: var(--cube-green)">1</span>
+          <h3>Copia tu cubo</h3>
+          <p>Con el blanco arriba y el verde de frente, pinta cada cara en la plantilla. La cara trasera (azul) se pinta como si giraras el cubo hacia la izquierda.</p>
+        </li>
+        <li class="step-card">
+          <span class="step-num" style="--c: var(--cube-red)">2</span>
+          <h3>Pulsa «Resolver»</h3>
+          <p>Primero se comprueba que el cubo sea posible: colores, esquinas giradas, aristas volteadas o piezas intercambiadas. Después se busca la solución.</p>
+        </li>
+        <li class="step-card">
+          <span class="step-num" style="--c: var(--cube-blue)">3</span>
+          <h3>Sigue los giros</h3>
+          <p>Reproduce la solución o avanza giro a giro con las flechas. Cada paso se anima en 3D y se explica con palabras.</p>
+        </li>
+      </ol>
+
+      <div class="card algo-card">
+        <div class="algo-text">
+          <h3><svg class="icon"><use href="#i-cpu"/></svg>El algoritmo de dos fases</h3>
+          <p>Herbert Kociemba ideó en 1992 una forma de resolver el cubo en muy pocos movimientos sin probar todas las combinaciones (¡hay más de 43 trillones!). Esta web lo implementa desde cero y lo ejecuta en un <em>Web Worker</em>, así que nada sale de tu equipo.</p>
+        </div>
+        <div class="algo-flow" aria-label="Esquema del algoritmo">
+          <div class="flow-node"><span class="flow-title">Cubo mezclado</span><span class="flow-sub">43·10¹⁸ estados</span></div>
+          <div class="flow-arrow"><span>Fase 1</span><small>orienta piezas<br>y aísla la capa media</small></div>
+          <div class="flow-node accent"><span class="flow-title">Subgrupo G1</span><span class="flow-sub">⟨U, D, R2, L2, F2, B2⟩</span></div>
+          <div class="flow-arrow"><span>Fase 2</span><small>coloca cada pieza<br>con giros de G1</small></div>
+          <div class="flow-node done"><span class="flow-title">¡Resuelto!</span><span class="flow-sub">≈ 20 movimientos</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Hecho con Three.js y mucho cariño por los cubos · Algoritmo de dos fases de Herbert Kociemba</p>
+    <p class="footer-keys"><kbd>Espacio</kbd> reproducir · <kbd>←</kbd> <kbd>→</kbd> paso a paso · <kbd>1</kbd>–<kbd>6</kbd> elegir color · <kbd>Ctrl</kbd>+<kbd>Z</kbd> deshacer</p>
+  </footer>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+</body>
+</html>
