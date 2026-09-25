@@ -1,7 +1,7 @@
 import {
-  COLORS, FACES, FACE_INFO, MOVE_FACE, UNKNOWN, applyMove, applyMoves, colorCounts, describeMove,
-  formatAlgorithm, invertMove, isSolved, makeMove, parseAlgorithm, randomScramble, solvedState,
-  stateToFacelets,
+  COLORS, FACES, FACE_INFO, MOVE_FACE, PATTERNS, UNKNOWN, applyMove, applyMoves, colorCounts, describeMove,
+  formatAlgorithm, invertMove, isSolved, makeMove, parseAlgorithm, randomScramble, solvedLike,
+  solvedState, stateToFacelets,
 } from './cube-model.js';
 import { faceletsToCubie } from './solver/kociemba.js';
 
@@ -457,29 +457,119 @@ async function solveCube() {
     toast('¡El cubo ya está resuelto! Mézclalo o pinta tu cubo.', 'success');
     return;
   }
-  solving = true;
-  solveBtn.classList.add('loading');
-  solveBtn.querySelector('.solve-label').textContent = solver.ready ? 'Calculando…' : 'Preparando el motor…';
-  setEngineStatus('busy', 'Calculando…');
   const snapshot = state.slice();
+  const result = await runSolver(snapshot, solveBtn, solveBtn.querySelector('.solve-label'));
+  if (!result) return;
+  loadSequence(result.moves, { kind: 'solve', ms: result.ms });
+  selectTab('solucion');
+  toast(`¡Solución encontrada en ${result.moves.length} movimientos!`, 'success');
+  revealPlayer();
+}
+
+/** Calcula la solución de `snapshot` mostrando el progreso en `button`. Devuelve null si falla. */
+async function runSolver(snapshot, button, label) {
+  solving = true;
+  const idleText = label.textContent;
+  button.classList.add('loading');
+  button.disabled = true;
+  label.textContent = solver.ready ? 'Calculando…' : 'Preparando el motor…';
+  setEngineStatus('busy', 'Calculando…');
   try {
     const [res] = await Promise.all([solver.solve(stateToFacelets(snapshot)), sleep(350)]);
-    if (snapshot.join() !== state.join()) return; // el cubo cambió mientras se calculaba
+    if (snapshot.join() !== state.join()) return null; // el cubo cambió mientras se calculaba
     const moves = res.moves.map((name) => parseAlgorithm(name)[0]);
     if (!isSolved(applyMoves(snapshot, moves))) throw new Error('La solución calculada no es válida.');
-    loadSolution(moves, res.ms);
-    selectTab('solucion');
-    toast(`¡Solución encontrada en ${moves.length} movimientos!`, 'success');
-    if (window.innerWidth < 1080) $('player').scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'end' });
+    return { moves, ms: res.ms };
   } catch (err) {
     toast(err.message, 'error');
+    return null;
   } finally {
     solving = false;
-    solveBtn.classList.remove('loading');
-    solveBtn.querySelector('.solve-label').textContent = 'Resolver cubo';
+    button.classList.remove('loading');
+    button.disabled = false;
+    label.textContent = idleText;
     setEngineStatus(solver.ready ? 'ready' : 'loading', solver.ready ? 'Motor listo' : 'Preparando el motor…');
   }
 }
+
+function revealPlayer() {
+  if (window.innerWidth < 1080) $('player').scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'end' });
+}
+
+// ---------------------------------------------------------------------------
+// Patrones y dibujos propios
+// ---------------------------------------------------------------------------
+
+const NET_POS = { U: [0, 1], L: [1, 0], F: [1, 1], R: [1, 2], B: [1, 3], D: [2, 1] };
+
+function miniNet(s) {
+  const el = document.createElement('div');
+  el.className = 'mini-net';
+  el.setAttribute('aria-hidden', 'true');
+  s.forEach((c, i) => {
+    const [fr, fc] = NET_POS[FACES[(i / 9) | 0]];
+    const cell = document.createElement('span');
+    cell.style.gridArea = `${fr * 3 + (((i % 9) / 3) | 0) + 1} / ${fc * 3 + (i % 3) + 1}`;
+    cell.style.setProperty('--c', colorHex(c));
+    el.appendChild(cell);
+  });
+  return el;
+}
+
+const patternGrid = $('patternGrid');
+for (const p of PATTERNS) {
+  const moves = parseAlgorithm(p.alg);
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'pattern-card';
+  b.dataset.pattern = p.id;
+  b.title = p.alg;
+  b.appendChild(miniNet(applyMoves(solvedState(), moves)));
+  const text = document.createElement('span');
+  text.className = 'pattern-text';
+  text.innerHTML = `<span class="pattern-name"></span><span class="pattern-meta">${moves.length} movimientos</span>`;
+  text.firstChild.textContent = p.name;
+  b.appendChild(text);
+  b.addEventListener('click', () => showPattern(p));
+  patternGrid.appendChild(b);
+}
+
+/** Pone el cubo resuelto y reproduce los giros que forman el patrón. */
+function showPattern(p) {
+  if (solving) return;
+  pushHistory();
+  state = solvedLike(state);
+  stateEdited();
+  loadSequence(parseAlgorithm(p.alg), { kind: 'pattern', name: p.name, patternId: p.id });
+  selectTab('solucion');
+  revealPlayer();
+  play();
+}
+
+$('designBtn').addEventListener('click', async () => {
+  if (solving) return;
+  const v = validate(state);
+  if (v.solved) {
+    toast('Primero pinta tu dibujo en la pestaña Colores.');
+    return;
+  }
+  if (!v.ok) {
+    toast(`Ese dibujo no se puede hacer: ${v.text}`, 'error');
+    return;
+  }
+  const target = state.slice();
+  const result = await runSolver(target, $('designBtn'), $('designBtn').querySelector('.design-label'));
+  if (!result) return;
+  // La solución lleva del dibujo al cubo resuelto; al revés, lleva del resuelto al dibujo.
+  const moves = result.moves.slice().reverse().map(invertMove);
+  pushHistory();
+  state = solvedLike(target);
+  stateEdited();
+  loadSequence(moves, { kind: 'design', name: 'Tu dibujo', ms: result.ms });
+  selectTab('solucion');
+  toast(`Tu dibujo se hace en ${moves.length} movimientos.`, 'success');
+  revealPlayer();
+});
 
 // ---------------------------------------------------------------------------
 // Reproductor de la solución
@@ -488,9 +578,25 @@ async function solveCube() {
 const playerEl = $('player');
 const movesList = $('movesList');
 
-function loadSolution(moves, ms) {
+const SEQUENCE_TEXT = {
+  solve: {
+    kind: 'Solución', done: '¡Cubo resuelto!',
+    tip: 'Sujeta tu cubo siempre igual que en la plantilla (mismo centro arriba y de frente): cada letra indica la cara tal y como la ves.',
+  },
+  pattern: {
+    kind: 'Patrón', done: '¡Patrón terminado!',
+    tip: 'Parte de un cubo resuelto con el blanco arriba y el verde de frente, y haz los giros en orden.',
+  },
+  design: {
+    kind: 'Dibujo', done: '¡Dibujo terminado!',
+    tip: 'Parte de un cubo resuelto, sujeto igual que en la plantilla, y haz los giros en orden para que aparezca tu dibujo.',
+  },
+};
+
+/** Carga una secuencia de giros que empieza en el estado actual del cubo. */
+function loadSequence(moves, { kind = 'solve', name = '', ms = null, patternId = null } = {}) {
   player.token++;
-  Object.assign(player, { moves, start: state.slice(), index: 0, ms, playing: false });
+  Object.assign(player, { moves, start: state.slice(), index: 0, ms, kind, playing: false });
   movesList.innerHTML = '';
   moves.forEach((m, i) => {
     const li = document.createElement('li');
@@ -504,12 +610,19 @@ function loadSolution(moves, ms) {
     li.appendChild(b);
     movesList.appendChild(li);
   });
+  const text = SEQUENCE_TEXT[kind];
+  $('seqKind').textContent = text.kind;
+  $('seqName').textContent = name || `${moves.length} movimientos`;
+  $('tipText').textContent = text.tip;
+  $('solvedBadgeText').textContent = text.done;
   $('statMoves').textContent = moves.length;
-  $('statTime').textContent = Math.max(1, Math.round(ms));
+  $('statTimeBox').hidden = ms === null;
+  if (ms !== null) $('statTime').textContent = Math.max(1, Math.round(ms));
   $('solutionEmpty').hidden = true;
   $('solutionBox').hidden = false;
   $('solutionCount').hidden = false;
   $('solutionCount').textContent = moves.length;
+  for (const card of patternGrid.children) card.classList.toggle('active', card.dataset.pattern === patternId);
   updatePlayer();
 }
 
@@ -518,6 +631,7 @@ function clearSolution() {
   if (!player.start) return;
   player.token++;
   Object.assign(player, { moves: [], start: null, index: 0, playing: false });
+  for (const card of patternGrid.children) card.classList.remove('active');
   $('solutionEmpty').hidden = false;
   $('solutionBox').hidden = true;
   $('solutionCount').hidden = true;
@@ -542,7 +656,7 @@ function stepForward(fromPlay = false) {
   afterPlayerStep();
   const done = cube ? cube.animateMove(move, state, moveDuration()) : sleep(moveDuration());
   return done.then(() => {
-    if (player.start && player.index === player.moves.length && !cube?.isAnimating() && isSolved(state)) celebrate();
+    if (player.start && player.index === player.moves.length && !cube?.isAnimating()) celebrate();
   });
 }
 
@@ -604,7 +718,7 @@ $('nextBtn').addEventListener('click', () => stepForward());
 $('prevBtn').addEventListener('click', stepBack);
 $('firstBtn').addEventListener('click', () => jumpTo(0));
 $('lastBtn').addEventListener('click', () => jumpTo(player.moves.length));
-$('copySolutionBtn').addEventListener('click', () => copyText(formatAlgorithm(player.moves), 'Solución copiada'));
+$('copySolutionBtn').addEventListener('click', () => copyText(formatAlgorithm(player.moves), 'Movimientos copiados'));
 
 for (const b of document.querySelectorAll('.speed button')) {
   b.addEventListener('click', () => setSpeed(Number(b.dataset.speed)));
@@ -641,7 +755,7 @@ function updatePlayer(bump = false) {
     $('moveDetail').textContent = `${describeMove(first).action}. Pulsa ▶ o → para verlo.`;
   } else if (index === total) {
     badge.textContent = '✓';
-    $('moveAction').textContent = '¡Cubo resuelto!';
+    $('moveAction').textContent = SEQUENCE_TEXT[player.kind].done;
     $('moveDetail').textContent = `${total} movimientos en total. Pulsa ▶ para verlo otra vez.`;
   } else {
     const m = moves[index - 1];

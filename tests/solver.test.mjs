@@ -5,8 +5,8 @@ import {
   CubieCube, CubeError, MOVE_NAMES, SOLVED_FACELETS, faceletsToCubie, initSolver, solve,
 } from '../js/solver/kociemba.js';
 import {
-  FACES, applyMoves, invertMove, isSolved, makeMove, parseAlgorithm, randomScramble,
-  solvedState, stateToFacelets,
+  FACES, PATTERNS, applyMoves, invertMove, isSolved, makeMove, parseAlgorithm, randomScramble,
+  solvedLike, solvedState, stateToFacelets,
 } from '../js/cube-model.js';
 
 // Generador pseudoaleatorio con semilla para que las pruebas sean reproducibles.
@@ -141,4 +141,22 @@ test('interpreta la notación', () => {
   assert.throws(() => parseAlgorithm('R Q'));
   assert.throws(() => parseAlgorithm('[R, U]'));
   assert.equal(invertMove(makeMove('R', 1)).name, "R'");
+});
+
+test('los patrones son válidos y distintos del cubo resuelto', () => {
+  for (const p of PATTERNS) {
+    const state = applyMoves(solvedState(), parseAlgorithm(p.alg));
+    assert.ok(!isSolved(state), p.name);
+    faceletsToCubie(stateToFacelets(state));
+  }
+});
+
+test('calcula cómo llegar a un dibujo desde el cubo resuelto', () => {
+  const rng = mulberry32(3);
+  for (let n = 0; n < 5; n++) {
+    const target = applyMoves(solvedState(), randomScramble(20, rng));
+    const solution = parseAlgorithm(solve(stateToFacelets(target)).join(' '));
+    const path = solution.slice().reverse().map(invertMove);
+    assert.deepEqual(applyMoves(solvedLike(target), path), target);
+  }
 });

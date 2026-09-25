@@ -46,6 +46,7 @@
       <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4.5M12 16h.01"/></symbol>
       <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-dasharray="3 3.3"/></symbol>
       <symbol id="i-keyboard" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></symbol>
+      <symbol id="i-grid" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></symbol>
       <symbol id="i-cube" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></symbol>
       <symbol id="i-cpu" viewBox="0 0 24 24"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2M15 20v2M2 15h2M2 9h2M20 15h2M20 9h2M9 2v2M9 20v2"/></symbol>
       <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></symbol>
@@ -117,7 +118,7 @@
             <span class="hint-paint">· Toca una pegatina para pintarla</span>
           </div>
           <div class="solved-badge" id="solvedBadge" hidden>
-            <svg class="icon"><use href="#i-sparkles"/></svg>¡Cubo resuelto!
+            <svg class="icon"><use href="#i-sparkles"/></svg><span id="solvedBadgeText">¡Cubo resuelto!</span>
           </div>
           <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
           <p class="webgl-error" id="webglError" hidden>Tu navegador no puede mostrar gráficos 3D (WebGL). Aun así puedes usar la plantilla para pintar y resolver el cubo.</p>
@@ -161,6 +162,9 @@
           <button class="tab" role="tab" id="tab-mezclar" aria-controls="pane-mezclar" aria-selected="false" data-tab="mezclar" tabindex="-1">
             <svg class="icon"><use href="#i-shuffle"/></svg>Mezclar
           </button>
+          <button class="tab" role="tab" id="tab-patrones" aria-controls="pane-patrones" aria-selected="false" data-tab="patrones" tabindex="-1">
+            <svg class="icon"><use href="#i-grid"/></svg>Patrones
+          </button>
           <button class="tab" role="tab" id="tab-solucion" aria-controls="pane-solucion" aria-selected="false" data-tab="solucion" tabindex="-1">
             <svg class="icon"><use href="#i-list"/></svg>Solución<span class="tab-badge" id="solutionCount" hidden></span>
           </button>
@@ -196,22 +200,34 @@
           <p class="pane-hint small">Con el teclado: <kbd>U</kbd> <kbd>R</kbd> <kbd>F</kbd> <kbd>D</kbd> <kbd>L</kbd> <kbd>B</kbd> giran cada cara y con <kbd>Mayús</kbd> giran al revés.</p>
         </div>
 
+        <div class="pane" id="pane-patrones" role="tabpanel" aria-labelledby="tab-patrones" hidden>
+          <p class="pane-hint">Elige un patrón y mira cómo se forma desde un cubo resuelto. Luego puedes repetirlo paso a paso en tu cubo.</p>
+          <div class="patterns" id="patternGrid"></div>
+          <div class="design-box">
+            <p><strong>Tu propio dibujo</strong><br>Pinta en la pestaña <b>Colores</b> lo que quieras ver en el cubo (una letra, una cruz, una carita…) y calculo los giros para conseguirlo desde el cubo resuelto.</p>
+            <button class="btn secondary wide" id="designBtn" type="button">
+              <span class="spinner" aria-hidden="true"></span><svg class="icon"><use href="#i-brush"/></svg><span class="design-label">Cómo hacer mi dibujo</span>
+            </button>
+          </div>
+        </div>
+
         <div class="pane" id="pane-solucion" role="tabpanel" aria-labelledby="tab-solucion" hidden>
           <div class="empty" id="solutionEmpty">
             <div class="empty-art" aria-hidden="true"><img src="favicon.svg" alt="" width="56" height="56"></div>
             <p><strong>Aún no hay solución</strong><br>Pinta tu cubo o mézclalo y pulsa «Resolver».</p>
           </div>
           <div class="solution" id="solutionBox" hidden>
+            <div class="seq-head"><span class="seq-kind" id="seqKind">Solución</span><strong id="seqName"></strong></div>
             <div class="stats">
               <div class="stat"><span class="stat-value" id="statMoves">0</span><span class="stat-label">movimientos</span></div>
-              <div class="stat"><span class="stat-value" id="statTime">0</span><span class="stat-label">ms de cálculo</span></div>
+              <div class="stat" id="statTimeBox"><span class="stat-value" id="statTime">0</span><span class="stat-label">ms de cálculo</span></div>
               <div class="stat"><span class="stat-value" id="statStep">0</span><span class="stat-label">paso actual</span></div>
             </div>
             <ol class="moves" id="movesList" aria-label="Movimientos de la solución"></ol>
             <div class="pane-actions">
-              <button class="btn ghost" id="copySolutionBtn" type="button"><svg class="icon"><use href="#i-copy"/></svg>Copiar solución</button>
+              <button class="btn ghost" id="copySolutionBtn" type="button"><svg class="icon"><use href="#i-copy"/></svg>Copiar movimientos</button>
             </div>
-            <p class="tip"><svg class="icon"><use href="#i-cube"/></svg><span>Sujeta tu cubo siempre igual que en la plantilla (mismo centro arriba y de frente): cada letra indica la cara tal y como la ves.</span></p>
+            <p class="tip"><svg class="icon"><use href="#i-cube"/></svg><span id="tipText">Sujeta tu cubo siempre igual que en la plantilla (mismo centro arriba y de frente): cada letra indica la cara tal y como la ves.</span></p>
           </div>
         </div>
 

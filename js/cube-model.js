@@ -233,3 +233,24 @@ export function colorCounts(state) {
   }
   return { counts, unknown };
 }
+
+// Patrones clásicos: se hacen partiendo del cubo resuelto.
+export const PATTERNS = [
+  { id: 'ajedrez', name: 'Tablero de ajedrez', alg: 'R2 L2 U2 D2 F2 B2' },
+  { id: 'puntos', name: 'Puntos', alg: "U D' R L' F B' U D'" },
+  { id: 'cruces', name: 'Cruces', alg: "U F B' L2 U2 L2 F' B U2 L2 U" },
+  { id: 'seis-t', name: 'Seis T', alg: "F2 R2 U2 F' B D2 L2 F B" },
+  { id: 'zigzag', name: 'Zigzag', alg: 'R L F B R L F B R L F B' },
+  { id: 'rayas', name: 'Rayas verticales', alg: "F U F R L2 B D' R D2 L D' B R2 L F U F" },
+  { id: 'tetris', name: 'Tetris', alg: "L R F B U' D' L' R'" },
+  { id: 'cubo-en-cubo', name: 'Cubo en cubo', alg: "F L F U' R U F2 L2 U' L' B D' B' L2 U" },
+  { id: 'cubo-triple', name: 'Cubo en cubo en cubo', alg: "U' L' U' F' R2 B' R F U B2 U B' L U' F U R F'" },
+  { id: 'superflip', name: 'Superflip', alg: "U R2 F B R B2 R U2 L B2 R U' D' R2 F R' L B2 U2 F2" },
+];
+
+/** Cubo resuelto con los mismos centros que `state` (o el esquema estándar si no sirven). */
+export function solvedLike(state) {
+  const centers = FACES.map((_, f) => state[f * 9 + 4]);
+  if (centers.includes(UNKNOWN) || new Set(centers).size !== 6) return solvedState();
+  return STICKERS.map((s) => centers[s.face]);
+}
