@@ -11,7 +11,7 @@ Web para resolver el cubo de Rubik 3×3 paso a paso. Copias los colores de tu cu
 - **Validación completa**: avisa si falta algún color, si una esquina está girada, una arista volteada o hay dos piezas intercambiadas.
 - **Algoritmo de dos fases de Kociemba** implementado desde cero en JavaScript. Se ejecuta en un Web Worker, así que la interfaz no se bloquea y nada sale del navegador.
 - **Reproductor de la solución** con play/pausa, paso a paso, saltos a cualquier movimiento, cuatro velocidades y la explicación de cada giro en español.
-- **Patrones**: diez diseños clásicos (tablero de ajedrez, cubo en cubo, superflip…) que se forman paso a paso desde el cubo resuelto.
+- **Patrones**: las banderas de México y Francia y diez diseños clásicos (tablero de ajedrez, cubo en cubo, superflip…) que se forman paso a paso desde el cubo resuelto.
 - **Tu propio dibujo**: pinta en la plantilla lo que quieras ver en el cubo y la web calcula los giros para conseguirlo desde el cubo resuelto (si el dibujo es posible).
 - **Mezclas** aleatorias o escritas a mano en notación estándar (`R U R' U'`, `F2`, `Rw`, `M`, `x`, `(R U)3`…) y giros manuales con botones o con el teclado.
 - Tema oscuro y claro, diseño adaptado a móvil y el estado se guarda al recargar.

@@ -527,7 +527,8 @@ for (const p of PATTERNS) {
   b.appendChild(miniNet(applyMoves(solvedState(), moves)));
   const text = document.createElement('span');
   text.className = 'pattern-text';
-  text.innerHTML = `<span class="pattern-name"></span><span class="pattern-meta">${moves.length} movimientos</span>`;
+  const where = p.face === 'U' ? ' · cara blanca' : '';
+  text.innerHTML = `<span class="pattern-name"></span><span class="pattern-meta">${moves.length} movimientos${where}</span>`;
   text.firstChild.textContent = p.name;
   b.appendChild(text);
   b.addEventListener('click', () => showPattern(p));
@@ -541,6 +542,7 @@ function showPattern(p) {
   state = solvedLike(state);
   stateEdited();
   loadSequence(parseAlgorithm(p.alg), { kind: 'pattern', name: p.name, patternId: p.id });
+  if (p.face === 'U') cube?.showTop();
   selectTab('solucion');
   revealPlayer();
   play();

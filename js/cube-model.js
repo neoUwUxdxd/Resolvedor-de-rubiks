@@ -235,7 +235,10 @@ export function colorCounts(state) {
 }
 
 // Patrones clásicos: se hacen partiendo del cubo resuelto.
+// `face`: cara en la que aparece el dibujo, para orientar la vista hacia ella.
 export const PATTERNS = [
+  { id: 'mexico', name: 'Bandera de México', alg: "F2 L2 D2 R2 F2 L2 U2 F' R2 B' U F R' D' R D2 L'", face: 'U' },
+  { id: 'francia', name: 'Bandera de Francia', alg: "R2 U' F2 U2 L2 R2 U' F D2 F2 D' L' F2 L2 B' R' D2", face: 'U' },
   { id: 'ajedrez', name: 'Tablero de ajedrez', alg: 'R2 L2 U2 D2 F2 B2' },
   { id: 'puntos', name: 'Puntos', alg: "U D' R L' F B' U D'" },
   { id: 'cruces', name: 'Cruces', alg: "U F B' L2 U2 L2 F' B U2 L2 U" },

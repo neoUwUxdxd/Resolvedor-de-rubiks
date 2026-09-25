@@ -333,6 +333,11 @@ export class Cube3D {
     this._flyTo(HOME_CAMERA.clone().multiplyScalar(this.fitDistance));
   }
 
+  /** Vista desde arriba, para ver bien la cara superior. */
+  showTop() {
+    this._flyTo(new Vector3(0.45, 1.6, 1).normalize().multiplyScalar(this.fitDistance));
+  }
+
   /** Alterna entre la vista frontal y la trasera (caras B, L y D). */
   flipView() {
     const back = this.camera.position.dot(HOME_CAMERA) < 0;

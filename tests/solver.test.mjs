@@ -151,6 +151,16 @@ test('los patrones son válidos y distintos del cubo resuelto', () => {
   }
 });
 
+test('las banderas aparecen en la cara de arriba', () => {
+  const top = (id) => {
+    const s = applyMoves(solvedState(), parseAlgorithm(PATTERNS.find((p) => p.id === id).alg));
+    return s.slice(0, 9).join('');
+  };
+  // Colores: 0 blanco, 1 rojo, 2 verde, 5 azul. Columnas de izquierda a derecha.
+  assert.equal(top('mexico'), '201201201');
+  assert.equal(top('francia'), '501501501');
+});
+
 test('calcula cómo llegar a un dibujo desde el cubo resuelto', () => {
   const rng = mulberry32(3);
   for (let n = 0; n < 5; n++) {
